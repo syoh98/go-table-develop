@@ -9,6 +9,14 @@
         FOR UPDATE
     </select>
 
+    <select id="getNamedLock" resultType="Integer">
+        SELECT GET_LOCK(#{lockName}, 10)
+    </select>
+
+    <select id="releaseNamedLock" resultType="Integer">
+        SELECT RELEASE_LOCK(#{lockName})
+    </select>
+
     <select id="isExistDailySchedule" resultType="boolean">
         SELECT IF(COUNT(*) > 0, true, false)
         FROM daily_schedule
@@ -41,4 +49,12 @@
         INSERT INTO reservation (member_seq, restaurant_id, status, member_count, created_at, reservation_start_at, reservation_end_at)
         VALUES (#{memberSeq}, #{restaurantId}, #{status}, #{memberCount}, now(), #{reservationStartAt}, #{reservationEndAt})
     </insert>
+
+    <select id="getReservationCount" resultType="int">
+        SELECT COUNT(*)
+        FROM reservation
+        WHERE restaurant_id = #{restaurantId}
+        AND reservation_start_at = #{reservationStartTime}
+        AND reservation_end_at = #{reservationEndTime}
+    </select>
 </mapper>

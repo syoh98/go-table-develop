@@ -12,6 +12,10 @@ import java.time.LocalTime;
 public interface ReservationMapper {
     public int getRestaurantLock(long restaurantId);
 
+    public Integer getNamedLock(@Param("lockName") String lockName);
+
+    public Integer releaseNamedLock(@Param("lockName") String lockName);
+
     public boolean isExistDailySchedule(@Param("restaurantId") long restaurantId,
                                         @Param("dayOfWeek") String dayOfWeek,
                                         @Param("startTime") LocalTime startTime,
