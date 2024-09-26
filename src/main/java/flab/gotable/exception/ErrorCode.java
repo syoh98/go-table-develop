@@ -18,6 +18,7 @@ public enum ErrorCode {
     DUPLICATED_RESERVATION_TIME(HttpStatus.BAD_REQUEST, "해당 시간을 포함한 예약 내역이 존재합니다."),
     RESERVATION_TIME_NOT_FOUND(HttpStatus.BAD_REQUEST, "예약하고자 하는 시간이 일반/특수 영업 스케줄에 존재하지 않습니다."),
     LOCK_ACQUISITION_FAILED(HttpStatus.CONFLICT, "락 획득에 실패했습니다."),
+    LOCK_SYSTEM_FAILURE(HttpStatus.INTERNAL_SERVER_ERROR, "락 획득 중 시스템 에러가 발생했습니다."),
     INVALID_RESERVATION_TIME(HttpStatus.BAD_REQUEST, "예약 종료 시간이 예약 시작 시간보다 앞서거나 동일할 수 없습니다."),
     PAST_RESERVATION_TIME(HttpStatus.BAD_REQUEST, "예약 시간이 현재 시간보다 이전일 수 없습니다."),
     EXCEEDS_MAX_MEMBER_COUNT(HttpStatus.BAD_REQUEST, "예약 가능 최대 인원 수를 초과했습니다."),
