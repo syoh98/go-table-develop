@@ -49,12 +49,4 @@
         INSERT INTO reservation (member_seq, restaurant_id, status, member_count, created_at, reservation_start_at, reservation_end_at)
         VALUES (#{memberSeq}, #{restaurantId}, #{status}, #{memberCount}, now(), #{reservationStartAt}, #{reservationEndAt})
     </insert>
-
-    <select id="getReservationCount" resultType="int">
-        SELECT COUNT(*)
-        FROM reservation
-        WHERE restaurant_id = #{restaurantId}
-        AND reservation_start_at = #{reservationStartTime}
-        AND reservation_end_at = #{reservationEndTime}
-    </select>
 </mapper>
