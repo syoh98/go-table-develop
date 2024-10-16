@@ -30,5 +30,9 @@ public interface ReservationMapper {
                                            @Param("reservationStartTime") LocalDateTime reservationStartTime,
                                            @Param("reservationEndTime") LocalDateTime reservationEndTime);
 
+    public int getReservationCount(@Param("restaurantId") long restaurantId,
+                                   @Param("reservationStartTime") LocalDateTime reservationStartTime,
+                                   @Param("reservationEndTime") LocalDateTime reservationEndTime);
+
     public void saveReservation(Reservation reservation);
 }
