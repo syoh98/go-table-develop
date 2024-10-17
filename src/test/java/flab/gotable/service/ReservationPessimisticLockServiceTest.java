@@ -6,7 +6,10 @@ import flab.gotable.dto.response.ReservationResponseDto;
 import flab.gotable.exception.*;
 import flab.gotable.mapper.ReservationMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,12 +20,15 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SpringBootTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Slf4j
-class ReservationServiceTest {
+public class ReservationPessimisticLockServiceTest {
 
     @Container
     public static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0.33")
@@ -57,7 +63,7 @@ class ReservationServiceTest {
         ReservationRequestDto requestDto = new ReservationRequestDto(1L, 99L, startTime, endTime, 3L);
 
         // when, then
-        Assertions.assertThrows(MemberNotFoundException.class, () -> { reservationService.reserveNamedLock(requestDto); });
+        Assertions.assertThrows(MemberNotFoundException.class, () -> { reservationService.reservePessimisticLock(requestDto); });
     }
 
     @Test
@@ -67,7 +73,7 @@ class ReservationServiceTest {
         ReservationRequestDto requestDto = new ReservationRequestDto(351L, 1L, startTime, endTime, 3L);
 
         // when, then
-        Assertions.assertThrows(StoreNotFoundException.class, () -> { reservationService.reserveNamedLock(requestDto); });
+        Assertions.assertThrows(StoreNotFoundException.class, () -> { reservationService.reservePessimisticLock(requestDto); });
     }
 
     @Test
@@ -77,7 +83,7 @@ class ReservationServiceTest {
         ReservationRequestDto requestDto = new ReservationRequestDto(1L, 1L, startTime, endTime, 0L);
 
         // when, then
-        Assertions.assertThrows(InvalidReservationMemberCountException.class, () -> { reservationService.reserveNamedLock(requestDto); });
+        Assertions.assertThrows(InvalidReservationMemberCountException.class, () -> { reservationService.reservePessimisticLock(requestDto); });
     }
 
     @Test
@@ -87,7 +93,7 @@ class ReservationServiceTest {
         ReservationRequestDto requestDto = new ReservationRequestDto(1L, 1L, startTime, endTime, 99L);
 
         // when, then
-        Assertions.assertThrows(InvalidReservationMemberCountException.class, () -> { reservationService.reserveNamedLock(requestDto); });
+        Assertions.assertThrows(InvalidReservationMemberCountException.class, () -> { reservationService.reservePessimisticLock(requestDto); });
     }
 
     @Test
@@ -97,7 +103,7 @@ class ReservationServiceTest {
         ReservationRequestDto requestDto = new ReservationRequestDto(1L, 1L, endTime, startTime, 3L);
 
         // when, then
-        Assertions.assertThrows(InvalidReservationTimeException.class, () -> { reservationService.reserveNamedLock(requestDto); });
+        Assertions.assertThrows(InvalidReservationTimeException.class, () -> { reservationService.reservePessimisticLock(requestDto); });
     }
 
     @Test
@@ -107,7 +113,7 @@ class ReservationServiceTest {
         ReservationRequestDto requestDto = new ReservationRequestDto(1L, 1L, startTime.minusDays(10), endTime.minusDays(10), 3L);
 
         // when, then
-        Assertions.assertThrows(InvalidReservationTimeException.class, () -> { reservationService.reserveNamedLock(requestDto); });
+        Assertions.assertThrows(InvalidReservationTimeException.class, () -> { reservationService.reservePessimisticLock(requestDto); });
     }
 
     @Test
@@ -128,7 +134,7 @@ class ReservationServiceTest {
         ReservationRequestDto requestDto = new ReservationRequestDto(1L, 1L, startTime, endTime, 3L);
 
         // when, then
-        Assertions.assertThrows(DuplicatedReservationException.class, () -> { reservationService.reserveNamedLock(requestDto); });
+        Assertions.assertThrows(DuplicatedReservationException.class, () -> { reservationService.reservePessimisticLock(requestDto); });
     }
 
     @Test
@@ -138,7 +144,7 @@ class ReservationServiceTest {
         ReservationRequestDto requestDto = new ReservationRequestDto(3L, 1L, startTime, endTime, 3L);
 
         // when, then
-        Assertions.assertThrows(ScheduleNotFoundException.class, () -> { reservationService.reserveNamedLock(requestDto); });
+        Assertions.assertThrows(ScheduleNotFoundException.class, () -> { reservationService.reservePessimisticLock(requestDto); });
     }
 
     @Test
@@ -148,7 +154,7 @@ class ReservationServiceTest {
         ReservationRequestDto requestDto = new ReservationRequestDto(1L, 1L, startTime, endTime, 3L);
 
         // when
-        ReservationResponseDto responseDto = reservationService.reserveNamedLock(requestDto);
+        ReservationResponseDto responseDto = reservationService.reservePessimisticLock(requestDto);
 
         // then
         Assertions.assertAll(
@@ -159,5 +165,36 @@ class ReservationServiceTest {
                 () -> Assertions.assertEquals(endTime, responseDto.getReservationEndTime()),
                 () -> Assertions.assertEquals(3L, responseDto.getMemberCount())
         );
+    }
+
+    @Test
+    @DisplayName("동시에 예약을 시도하는 경우 유효한 예약은 1건만 존재한다.")
+    void concurrentReservationTest() throws InterruptedException {
+        // given
+        ReservationRequestDto requestDto = new ReservationRequestDto(2L, 2L, startTime, endTime, 3L);
+
+        int threadCount = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        // when
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                try {
+                    reservationService.reservePessimisticLock(requestDto);
+                } catch (Exception e) {
+                    System.err.println("Exception occurred: " + e.getMessage());
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+
+        // then
+        long reservationCount = reservationMapper.getReservationCount(2L, startTime, endTime);
+
+        Assertions.assertEquals(1, reservationCount);
     }
 }
