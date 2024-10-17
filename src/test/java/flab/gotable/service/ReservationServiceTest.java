@@ -104,7 +104,7 @@ class ReservationServiceTest {
     @DisplayName("예약 시작 시간이 현재 시간보다 이전인 경우 InvalidReservationTimeException 예외를 발생시킨다.")
     void reservePastStartTime() {
         // given
-        ReservationRequestDto requestDto = new ReservationRequestDto(1L, 1L, startTime.minusDays(7), endTime.minusDays(7), 3L);
+        ReservationRequestDto requestDto = new ReservationRequestDto(1L, 1L, startTime.minusDays(10), endTime.minusDays(10), 3L);
 
         // when, then
         Assertions.assertThrows(InvalidReservationTimeException.class, () -> { reservationService.reserveNamedLock(requestDto); });
