@@ -22,7 +22,7 @@ public class ReservationAPIController {
     @PostMapping
     public ApiResponse<ReservationResponseDto> createReserve(@RequestBody ReservationRequestDto reservationRequestDto) {
 
-        ReservationResponseDto reservationDetails = reservationService.reserve(reservationRequestDto);
+        ReservationResponseDto reservationDetails = reservationService.reserveNamedLock(reservationRequestDto);
 
         return ApiResponse.ok(reservationDetails, "예약 성공");
     }

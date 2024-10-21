@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 public class StoreServiceTest {
+
     private StoreService storeService;
+    private final LocalDate currentDate = LocalDate.now().plusDays(7);
 
     @BeforeEach
     void setup() {
@@ -54,7 +56,7 @@ public class StoreServiceTest {
             public List<SpecificSchedule> findSpecificScheduleByStoreId(Long id) {
                 if (id == 1L) {
                     return Arrays.asList(
-                            new SpecificSchedule(LocalDate.of(2024, 7, 15), LocalTime.parse("10:00"), LocalTime.parse("15:00"), 60L)
+                            new SpecificSchedule(currentDate, LocalTime.parse("10:00"), LocalTime.parse("15:00"), 60L)
                     );
                 }
                 return Collections.emptyList();
@@ -121,10 +123,11 @@ public class StoreServiceTest {
         Assertions.assertEquals(expectedOpenSchedule, result.getOpenSchedule());
 
         Map<String, DayInfo> availableDays = result.getAvailableDays();
+        String expectedDate = currentDate.toString();
         Assertions.assertNotNull(availableDays);
-        Assertions.assertTrue(availableDays.containsKey("2024-07-12"));
+        Assertions.assertTrue(availableDays.containsKey(expectedDate));
 
-        DayInfo dayInfo = availableDays.get("2024-07-12");
+        DayInfo dayInfo = availableDays.get(expectedDate);
         Assertions.assertNotNull(dayInfo);
 
         List<String> selectableTimes = dayInfo.getSelectableTimes();
