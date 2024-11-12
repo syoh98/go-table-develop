@@ -23,6 +23,8 @@ jobs:
       SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
       SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
       SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+      SPRING_REDIS_HOST: ${{ secrets.SPRING_REDIS_HOST }}
+      SPRING_REDIS_PORT: ${{ secrets.SPRING_REDIS_PORT }}
 
     steps:
       # 1. 코드 체크아웃
@@ -38,7 +40,7 @@ jobs:
 
       # 3. Gradle 캐시 설정
       - name: Cache Gradle packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4.1.2
         with:
           path: |
             ~/.gradle/caches
