@@ -25,6 +25,7 @@ jobs:
       SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
       SPRING_REDIS_HOST: ${{ secrets.SPRING_REDIS_HOST }}
       SPRING_REDIS_PORT: ${{ secrets.SPRING_REDIS_PORT }}
+      MYBATIS_MAPPER_LOCATIONS: "classpath:mapper/**/*.xml"
 
     steps:
       # 1. 코드 체크아웃
